@@ -1,0 +1,51 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, macos-14, windows-2022]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Smoke test
+        shell: bash
+        run: |
+          if [ -f build/molan-av3a ]; then BIN=build/molan-av3a; else BIN=build/Release/molan-av3a.exe; fi
+          "$BIN" 2>&1 | head -8
+          "$BIN" decode /dev/null 2>&1 | head -2 || true
+          echo "smoke ok: $BIN"
+
+      - name: Upload library artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: molan-av3a-${{ matrix.os }}
+          path: |
+            build/libmolan_av3a.a
+            build/Release/molan_av3a.lib
+            build/Release/molan-av3a.exe
+            include/molan_av3a.h
+          if-no-files-found: ignore
