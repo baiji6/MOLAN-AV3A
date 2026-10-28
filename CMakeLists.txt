@@ -72,17 +72,23 @@ target_include_directories(molan_av3a
 )
 
 target_compile_definitions(molan_av3a PRIVATE
-    # silence the reference decoder's stdio logging (printf -> no-op)
-    printf=molan_av3a_quiet_printf
     # decoder.c doubles as the upstream CLI; exclude its main() from the lib
     AVS3_NO_MAIN=1
 )
-# Ubuntu enables _FORTIFY_SOURCE at -O2+, where bits/stdio2.h re-defines
-# printf(...) -> __printf_chk(...) and would override the silencing macro
-# above. Disable fortify for this target only.
-if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(molan_av3a PRIVATE -U_FORTIFY_SOURCE)
+
+# Silence the reference decoder's stdio logging (printf -> no-op) by
+# force-including a shim that pulls in <stdio.h> first and only then
+# shadows printf. A bare "-Dprintf=..." rename cannot work portably:
+# on MSVC, printf is an inline function *definition* inside stdio.h,
+# so the rename duplicates the quiet function's body (C2084) and makes
+# call sites bind to real stdout output instead of the no-op.
+set(MOLAN_AV3A_QUIET_H "${CMAKE_CURRENT_SOURCE_DIR}/src/api/molan_av3a_quiet.h")
+if(MSVC)
+    target_compile_options(molan_av3a PRIVATE "/FI${MOLAN_AV3A_QUIET_H}")
+else()
+    target_compile_options(molan_av3a PRIVATE "-include" "${MOLAN_AV3A_QUIET_H}")
 endif()
+
 if(MSVC)
     target_compile_definitions(molan_av3a PRIVATE _CRT_SECURE_NO_WARNINGS)
 else()

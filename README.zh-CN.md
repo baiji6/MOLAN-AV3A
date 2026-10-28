@@ -103,11 +103,15 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release
 ```
 
-已在 x86-64 Linux（GCC）验证。CI 覆盖 Linux / macOS / Windows 构建矩阵。
+已在 x86-64 Linux（GCC）验证，并在 Windows（MinGW-w64 + Wine）交叉验证。CI 覆盖 Linux / macOS / Windows（MSVC）构建矩阵。
 
 ## 验证
 
-在真实网易云 Audio Vivid 文件（285 秒、12 声道）上与**未修改的上游参考 CLI** 做了端到端逐字节比对：`molan-av3a decode` 产出的 PCM（MP4 与裸 ES 两条路径）与参考解码器输出完全一致。桌面 x86-64 单核基准约 14 倍实时。
+在真实网易云 Audio Vivid 文件（285 秒、12 声道）上与**未修改的上游参考 CLI** 做了端到端逐字节比对：`molan-av3a decode` 产出的 PCM（MP4 与裸 ES 两条路径）与参考解码器输出**在同平台、同工具链下**完全一致。桌面 x86-64 单核基准约 14 倍实时。
+
+### 平台说明：跨平台输出**不是** bit-exact
+
+这是上游参考解码器自身的属性，并非本封装引入。参考软件依赖 libm 超越函数（`sin`、`cos`、`pow` 等），Windows（msvcrt）实现与 glibc 不同：两个平台的输出从第一帧起就有差异（约 84% 样本不同，最大偏差 2100/32768，约 35 dB SNR）。未修改的参考 CLI 自身做同样的跨平台比对时差异**完全相同**，而 MOLAN-AV3A 与参考软件在**各平台内部**保持 bit-exact（已在 Linux/GCC 与 Windows/MinGW+Wine 验证）。可复现性请以「同平台 + 同工具链」为单位衡量。
 
 ## 许可
 

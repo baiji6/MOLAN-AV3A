@@ -19,7 +19,7 @@
 extern "C" {
 #endif
 
-#define MOLAN_AV3A_VERSION "0.1.0"
+#define MOLAN_AV3A_VERSION "0.1.1"
 
 /* ---- Return codes ------------------------------------------------------ */
 #define MOLAN_AV3A_OK           0   /* success (frame decoded or more input needed) */
@@ -63,7 +63,7 @@ void molan_av3a_free(molan_av3a *dec);
  * instance instead if complete isolation is required. */
 void molan_av3a_flush(molan_av3a *dec);
 
-/* Library version string ("0.1.0"). */
+/* Library version string ("0.1.1"). */
 const char *molan_av3a_version(void);
 
 /* ---- Metadata ---------------------------------------------------------- */

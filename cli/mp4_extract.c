@@ -209,7 +209,7 @@ int mp4_extract_audio(const uint8_t *data, size_t size,
                       char fourcc[5], const char **err)
 {
     box_cursor top = { data, size, 0 };
-    trak_state st;
+    trak_state st = {0};
     uint8_t tag[4];
     const uint8_t *body;
     size_t body_size, header_size;

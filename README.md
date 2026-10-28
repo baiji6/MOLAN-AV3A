@@ -103,11 +103,15 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release
 ```
 
-Verified on x86-64 Linux (GCC). CI builds Linux / macOS / Windows matrices.
+Verified on x86-64 Linux (GCC) and cross-checked on Windows (MinGW-w64, run under Wine). CI builds Linux / macOS / Windows (MSVC) matrices.
 
 ## Validation
 
-Bit-exactness was verified end-to-end against the unmodified upstream reference CLI on a real 285-second, 12-channel NetEase Audio Vivid file: the PCM produced by `molan-av3a decode` (from both MP4 and raw-ES inputs) is byte-for-byte identical to the reference decoder output. Benchmarked at ~14x realtime on a desktop x86-64 core.
+Bit-exactness was verified end-to-end against the unmodified upstream reference CLI on a real 285-second, 12-channel NetEase Audio Vivid file: the PCM produced by `molan-av3a decode` (from both MP4 and raw-ES inputs) is byte-for-byte identical to the reference decoder output **when both are built with the same toolchain on the same platform**. Benchmarked at ~14x realtime on a desktop x86-64 core.
+
+### Platform note: cross-platform output is *not* bit-exact
+
+This is a property of the upstream reference decoder, not of this wrapper. The reference software relies on libm transcendental functions (`sin`, `cos`, `pow`, ...), and the Windows (msvcrt) implementations differ from glibc. Output between two platforms diverges from the first frame (~84% of samples differ, max delta 2100/32768, ~35 dB SNR). The unmodified reference CLI shows **exactly** the same divergence when its Windows build is compared with its Linux build, while MOLAN-AV3A stays bit-exact versus the reference *per platform* (verified on Linux/GCC and Windows/MinGW under Wine). Treat per-platform, per-toolchain output as the reproducibility unit.
 
 ## License
 

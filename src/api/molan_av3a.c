@@ -35,8 +35,10 @@ extern int   avs3_decode(void *h, unsigned char *pDataIN, int nLenIn,
 
 #define AVS3_TRUE 1
 
-/* Upstream logs through printf()/LOGD(); the library target compiles with
- * -Dprintf=molan_av3a_quiet_printf so nothing leaks to the host process. */
+/* Upstream logs through printf()/LOGD(); every library TU force-includes
+ * src/api/molan_av3a_quiet.h, which shadows printf with this no-op so
+ * nothing leaks to the host process (see that header for why the shadow
+ * is applied via force-include rather than a -D rename). */
 int molan_av3a_quiet_printf(const char *fmt, ...)
 {
     (void)fmt;
